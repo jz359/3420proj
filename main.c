@@ -14,6 +14,6 @@ int main() {
 	while(1) {
 		Accelerometer_GetState(&state);
 		Magnetometer_GetState(&mstate);
-		debug_prinf("%5d %5d %5d %5d %5d %5d\r\n", state.x, state.y, state.z);
+		debug_printf("%5d %5d %5d %5d %5d %5d\r\n", state.x, state.y, state.z);
 	}
 }
