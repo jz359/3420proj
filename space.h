@@ -8,7 +8,7 @@ volatile extern coordinate *curr_pos;
 
 void setup_led_timer(void);
 
-float calc_distance(coordinate *state);
-void update_coordinate(coordinate *state);
+float calc_distance(coordinate *state, int seconds);
+void update_coordinate(coordinate *state, int seconds);
 
 #endif
