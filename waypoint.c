@@ -37,7 +37,7 @@ void init_waypoint(void) {
 	wp->pos->z = 0;
 	wp->def_radius = 3;
 	wp->near_radius = 5;
-	wp->is_hit = false;
+	wp->is_hit = 0;
 	wp->next = NULL;
 
 	push_tail_waypoint(wp);
@@ -52,21 +52,22 @@ void update_nearest_waypoint(void) {
 	travel->next;
 
 	while (travel) {
-		float d = calc_distance(travel->pos, curr_state->pos);
-		
-		if (d < target_distance) {
-			target_distance = d;
-			nearest_waypoint = travel;
+		if (!travel->is_hit) {
+			float d = calc_distance(travel->pos, curr_state->pos);
+			if (d < target_distance) {
+				target_distance = d;
+				nearest_waypoint = travel;
+			}	
 		}
-
 		travel = travel->next;
 	}
 }
 
 bool is_near_waypoint(void) {
-	
+
 }
 
 void hit_waypoint(waypoint* wp) {
-
+	wp->is_hit = 1;
+	waypoints_hit += 1;
 }

@@ -14,7 +14,7 @@ typedef struct waypoint_type {
 	vector* pos;
 	float def_radius;
 	float near_radius;
-	bool is_hit;
+	unsigned int is_hit;
 
 	waypoint* next;
 } waypoint;
@@ -23,6 +23,8 @@ typedef struct waypoint_type {
 volatile extern waypoint* nearest_waypoint = NULL;
 volatile extern waypoint* waypoint_head = NULL;
 volatile extern waypoint* waypoint_tail = NULL;
+
+volatile extern unsigned int waypoints_hit = 0;
 
 /*
 initialize a waypoint randomly and add it to the list
