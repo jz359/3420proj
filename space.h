@@ -1,13 +1,12 @@
 #ifndef __SPACE_H__
 #define __SPACE_H__
 
-typedef struct space_state coordinate {
-	int x;
-	int y;
-	int z;
-}
+#include <stdlib.h>
 
-coordinate curr_pos;
+struct space_state;
+typedef struct space_state coordinate;
+
+extern coordinate *curr_pos;
 
 void setup_space_timers(void);
 
