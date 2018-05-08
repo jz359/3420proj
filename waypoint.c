@@ -47,8 +47,15 @@ void update_nearest_waypoint(void) {
 
 	if (!nearest_waypoint) return;
 
-	float target_distance = calc_distance(nearest_waypoint->pos, curr_state->pos);
-	waypoint* travel = nearest_waypoint;
+	float target_distance;
+
+	if (nearest_waypoint->is_hit) {
+		target_distance = 0;
+	} else {
+		target_distance = calc_distance(nearest_waypoint->pos, curr_state->pos);
+	}
+
+	waypoint* travel = waypoint_head;
 	travel->next;
 
 	while (travel) {
@@ -64,10 +71,22 @@ void update_nearest_waypoint(void) {
 }
 
 bool is_near_waypoint(void) {
-
+	float d = calc_distance(nearest_waypoint->pos, curr_state->pos);
+	return (d <= nearest_waypoint->near_radius);
 }
 
+bool did_hit_waypoint(void) {
+	if (calc_distance(nearest_waypoint->pos, curr_state->pos) <= nearest_waypoint->def_radius) {
+		nearest_waypoint->is_hit = 1;
+		waypoints_hit++;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/*
 void hit_waypoint(waypoint* wp) {
 	wp->is_hit = 1;
 	waypoints_hit += 1;
-}
+}*/
