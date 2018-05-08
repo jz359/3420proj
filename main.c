@@ -5,18 +5,10 @@
 #include "fsl_debug_console.h"
 #include "board.h"
 
-#include "space.h"
 #include "constants.h"
 #include "waypoint.h"
 
 #define PI 3.14159265
-
-struct plane_state {
-	float fuel;
-	float velocity;
-	float heading;
-	vector *pos;
-};
 
 // volatile vector *curr_pos;
 volatile plane_state *curr_state;
@@ -70,15 +62,16 @@ void calculate_roll(float x) {
 	float v = curr_state->velocity;
 	float rad = (v*v)/(tanf(angle)*grav*1000);
 	
-	curr_state->heading = (v*sinf(angle))/(rad*rad);
+	float diff = (fabs(angle/100) > 0.01 ? angle/100 : 0)/5; //threshold val to detect change
+	curr_state->heading = fmod(curr_state->heading - diff, 2 * PI); 
 
 	float heading = curr_state->heading;
 	
-	float diff = curr_state->velocity * 0.5 * cosf(heading) * TIME_UNIT;
+	//float diff = curr_state->velocity * 0.5 * cosf(heading) * TIME_UNIT;
 	curr_state->pos->x += curr_state->velocity * 0.5 * cos(heading*PI) * TIME_UNIT;
 	curr_state->pos->y += curr_state->velocity * 0.5 * sin(heading*PI) * TIME_UNIT;
 
-	printf("roll: %f, heading: %f diff: %f x: %f, y: %f \r", percentage, heading, rad, curr_state->pos->x, curr_state->pos->y);
+	printf("roll: %f, heading: %f diff: %f x: %f, y: %f \r", percentage, heading * 180 / PI, diff, curr_state->pos->x, curr_state->pos->y);
 }
 
 /*

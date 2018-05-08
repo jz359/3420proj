@@ -7,11 +7,16 @@ typedef struct space_state {
 	float z;
 } vector;
 
+typedef struct plane_state {
+	float fuel;
+	float velocity;
+	float heading;
+	vector *pos;
+} plane_state;
+
+
 // struct space_state;
 // typedef struct space_state vector;
-
-struct plane_state;
-typedef struct plane_state plane_state;
 
 // volatile extern vector *curr_pos;
 volatile extern plane_state *curr_state;

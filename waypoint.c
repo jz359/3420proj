@@ -1,9 +1,10 @@
 #include "waypoint.h"
 
 // helpers
+/*
 waypoint * pop_front_waypoint() {
 	if (!waypoint_head) return NULL;
-	waypoint *wp = waypoint_head;
+	volatile waypoint *wp = waypoint_head;
 	waypoint_head = wp->next;
 	if (waypoint_tail == wp) {
 		waypoint_tail = NULL;
@@ -11,7 +12,14 @@ waypoint * pop_front_waypoint() {
 
 	wp->next = NULL;
 	return wp;
-}
+}*/
+
+volatile waypoint* nearest_waypoint = NULL;
+volatile waypoint* waypoint_head = NULL;
+volatile waypoint* waypoint_tail = NULL;
+
+volatile unsigned int waypoints_hit = 0;
+
 
 void push_tail_waypoint(waypoint *wp) {
 	if (!waypoint_head) {
@@ -55,7 +63,7 @@ void update_nearest_waypoint(void) {
 		target_distance = calc_distance(nearest_waypoint->pos, curr_state->pos);
 	}
 
-	waypoint* travel = waypoint_head;
+	volatile waypoint* travel = waypoint_head;
 	travel->next;
 
 	while (travel) {
@@ -70,18 +78,18 @@ void update_nearest_waypoint(void) {
 	}
 }
 
-bool is_near_waypoint(void) {
+int is_near_waypoint(void) {
 	float d = calc_distance(nearest_waypoint->pos, curr_state->pos);
 	return (d <= nearest_waypoint->near_radius);
 }
 
-bool did_hit_waypoint(void) {
+int did_hit_waypoint(void) {
 	if (calc_distance(nearest_waypoint->pos, curr_state->pos) <= nearest_waypoint->def_radius) {
 		nearest_waypoint->is_hit = 1;
 		waypoints_hit++;
-		return true;
+		return 1;
 	} else {
-		return false;
+		return 0;
 	}
 }
 
