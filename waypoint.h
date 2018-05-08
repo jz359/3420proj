@@ -20,10 +20,14 @@ typedef struct waypoint_type {
 } waypoint;
 
 // pointer to the nearest waypoint; constantly update
-volatile extern waypoint* nearest_waypoint;
-volatile extern waypoint* waypoint_head;
+volatile extern waypoint* nearest_waypoint = NULL;
+volatile extern waypoint* waypoint_head = NULL;
+volatile extern waypoint* waypoint_tail = NULL;
 
-vector* init_waypoint();
-vector* update_nearest_waypoint(void);
+/*
+initialize a waypoint randomly and add it to the list
+*/
+void init_waypoint(void);
+void update_nearest_waypoint(void);
 bool is_near_waypoint(void);
 void hit_waypoint(waypoint* wp);
