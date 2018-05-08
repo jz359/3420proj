@@ -10,12 +10,6 @@
 
 #define PI 3.14159265
 
-struct space_state {
-	float x;
-	float y;
-	float z;
-};
-
 struct plane_state {
 	float fuel;
 	float velocity;
@@ -23,7 +17,7 @@ struct plane_state {
 	vector *pos;
 };
 
-volatile vector *curr_pos;
+// volatile vector *curr_pos;
 volatile plane_state *curr_state;
 
 /*
@@ -123,10 +117,12 @@ void init_plane_state(void) {
 }
 
 int main(){
+	/*
 	curr_pos = malloc(sizeof(vector));
 	curr_pos->x = 0;
 	curr_pos->y = 0;
 	curr_pos->z = 0;
+	*/
 	
 	// init stuff 
 	hardware_init();
