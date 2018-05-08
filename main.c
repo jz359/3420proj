@@ -8,19 +8,21 @@
 #include "constants.h"
 
 struct space_state {
-	double x;
-	double y;
-	double z;
+	float x;
+	float y;
+	float z;
 };
 
 
-coordinate *curr_pos;
+volatile coordinate *curr_pos;
 
 /*
 	PIT0 represents the timer to continually poll the LED
 */
 void PIT0_IRQHandler(void) {
-	debug_printf("kek \r\n");
+		printf("%f, %f, %f \r", curr_pos->x,curr_pos->y,curr_pos->z);
+		PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
+		PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
 }
 
 /*
@@ -31,20 +33,21 @@ void setup_led_timer(void) {
 	PIT->MCR = 0;
 
 	NVIC_EnableIRQ(PIT0_IRQn);
-	PIT->CHANNEL[0].LDVAL = DEFAULT_SYSTEM_CLOCK;
+	PIT->CHANNEL[0].LDVAL = DEFAULT_SYSTEM_CLOCK * 2;
 	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
 	PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
 }
 
-double cvt_g_to_mm (int gforce) {
-	return 0.5 * 9.80665 * (double) gforce * TIME_INT_S * TIME_INT_S;
+float cvt_g_to_mm (float gforce) {
+	float mm = 0.5 * 9.80665 * gforce * TIME_INT_S * TIME_INT_S;
+	return mm;
 }
 
-coordinate get_vectorized(coordinate state) {
+coordinate get_vectorized(coordinate *state) {
 	coordinate vector = {
-		cvt_g_to_mm(state.x),
-		cvt_g_to_mm(state.y),
-		cvt_g_to_mm(state.z)
+		cvt_g_to_mm(state->x),
+		cvt_g_to_mm(state->y),
+		cvt_g_to_mm(state->z)
 	};
 	return vector;
 }
@@ -52,37 +55,34 @@ coordinate get_vectorized(coordinate state) {
 /*
 	Calculates the distance based on the accelerations at a given time
 */
-double calc_distance(coordinate state) {
-	double x = cvt_g_to_mm(state.x);
-	double y = cvt_g_to_mm(state.y);
-	double z = cvt_g_to_mm(state.z);
+float calc_distance(coordinate *state) {
+	float x = cvt_g_to_mm(state->x);
+	float y = cvt_g_to_mm(state->y);
+	float z = cvt_g_to_mm(state->z);
 	return sqrt(x * x + y * y + z * z); // do this with the closest goal point
 }
 
 /*
 	Updates the coordinate curr_pos to the current locations.
 */
-void update_coordinate(coordinate state) {
+void update_coordinate(coordinate *state) {
 	coordinate new_vec = get_vectorized(state);
+
 	curr_pos->x += new_vec.x;
 	curr_pos->y += new_vec.y;
 	curr_pos->z += new_vec.z;
 }
 
 ACCELEROMETER_STATE state;
-int x_0;
-int y_0;
-int z_0;
 
+/**
+	Initializes the acceleration values in x_0, y_0, z_0 so we get an accurate relative acceleration
+*/
 void init_accel_values(void) {
 	Accelerometer_GetState(&state);
 	x_0 = state.x;
 	y_0 = state.y;
 	z_0 = state.z;
-
-	x_stationary = state.x;
-	y_stationary = state.y;
-	z_stationary = state.z;	
 }
 
 int main(){
@@ -91,28 +91,28 @@ int main(){
 	curr_pos->y = 0;
 	curr_pos->z = 0;
 	
+	// init stuff 
 	hardware_init();
 	Accelerometer_Initialize();
 	init_accel_values();
+	setup_led_timer();
+	
+	// continuously poll the accelerometer
 	while(1) {
 		Accelerometer_GetState(&state);
-		if (abs(state.x - x_0) > ACCEL_THRESHOLD 
-			|| abs(state.y - y_0) > ACCEL_THRESHOLD 
-			|| abs(state.z - z_0) > ACCEL_THRESHOLD) {
-			debug_printf("changed!\r\n");
-				
-			coordinate *relative = malloc(sizeof(coordinate));
-			relative->x = state.x - x_stationary;
-			relative->y = state.y - y_stationary;
-			relative->z = state.z - z_stationary;
-			debug_printf("state: %5d, %5d, %5d \r\n", state.x,state.y,state.z);
-			debug_printf("stationary: %5d, %5d, %5d \r\n", x_stationary,y_stationary,z_stationary);
-			debug_printf("relative: %5d, %5d, %5d \r\n", relative->x,relative->y,relative->z);
-			debug_printf("----------------------\r\n");
-			free(relative);
-			//update_coordinate(relative);
-			//debug_printf("%5d, %5d, %5d \r\n", curr_pos->x,curr_pos->y,curr_pos->z);
-			};
+		
+		// calculate the relative accelerations
+		int diff_x = state.x - x_0;
+		int diff_y = state.y - y_0;
+		int diff_z = state.z - z_0;
+
+		coordinate *relative = malloc(sizeof(coordinate));
+		relative->x = diff_x;
+		relative->y = diff_y;
+		relative->z = diff_z;
+		update_coordinate(relative);
+		free(relative);
+		
 		x_0 = state.x;
 		y_0 = state.y;
 		z_0 = state.z;
