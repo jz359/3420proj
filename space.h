@@ -2,13 +2,17 @@
 #define __SPACE_H__
 
 struct space_state;
-typedef struct space_state coordinate;
+typedef struct space_state vector;
 
-volatile extern coordinate *curr_pos;
+struct plane_state;
+typedef struct plane_state plane_state;
+
+volatile extern vector *curr_pos;
+volatile extern plane_state *curr_state;
 
 void setup_led_timer(void);
 
-float calc_distance(coordinate *state, int seconds);
-void update_coordinate(coordinate *state, int seconds);
+float calc_distance(vector *state);
+void update_vector(vector *state);
 
 #endif
