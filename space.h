@@ -18,7 +18,7 @@ volatile extern plane_state *curr_state;
 
 void setup_led_timer(void);
 
-float calc_distance(vector *state);
+float calc_distance(vector *state, vector* state2);
 void update_vector(vector *state);
 
 #endif

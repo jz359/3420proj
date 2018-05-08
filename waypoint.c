@@ -45,10 +45,26 @@ void init_waypoint(void) {
 
 void update_nearest_waypoint(void) {
 
+	if (!nearest_waypoint) return;
+
+	float target_distance = calc_distance(nearest_waypoint->pos, curr_state->pos);
+	waypoint* travel = nearest_waypoint;
+	travel->next;
+
+	while (travel) {
+		float d = calc_distance(travel->pos, curr_state->pos);
+		
+		if (d < target_distance) {
+			target_distance = d;
+			nearest_waypoint = travel;
+		}
+
+		travel = travel->next;
+	}
 }
 
 bool is_near_waypoint(void) {
-
+	
 }
 
 void hit_waypoint(waypoint* wp) {

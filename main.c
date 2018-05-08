@@ -7,6 +7,7 @@
 
 #include "space.h"
 #include "constants.h"
+#include "waypoint.h"
 
 #define PI 3.14159265
 
@@ -49,11 +50,11 @@ float cvt_g_to_mm (float gforce) {
 /*
 	Calculates the distance based on the accelerations at a given time
 */
-float calc_distance(vector *state) {
-	float x = cvt_g_to_mm(state->x);
-	float y = cvt_g_to_mm(state->y);
-	float z = cvt_g_to_mm(state->z);
-	return sqrt(x * x + y * y + z * z); // do this with the closest goal point
+float calc_distance(vector *state, vector *state2) {
+	float x_d = state->x - state2->x;
+	float y_d = state->y - state2->y;
+	float z_d = state->z - state2->z;
+	return sqrt(x_d * x_d + y_d * y_d + z_d * z_d);
 }
 
 void calculate_pitch(float y) {
