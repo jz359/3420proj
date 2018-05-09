@@ -18,4 +18,13 @@ extern float DIV_CONST;
 extern float FUEL_LOSS;
 extern float TIME_UNIT;
 
+extern unsigned int GREEN_LED_DELAY;
+extern unsigned int BLUE_LED_DELAY;
+extern unsigned int BLUE_LED_DELAY_BASE
+extern unsigned int RED_LED_DELAY;
+
+extern int toggled;
+
+int calc_flash_delay(int percentage);
+
 #endif

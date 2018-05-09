@@ -5,6 +5,7 @@
 #include "fsl_debug_console.h"
 #include "board.h"
 
+#include "utils.h"
 #include "constants.h"
 #include "waypoint.h"
 #include "utils.h"
@@ -18,8 +19,9 @@ volatile plane_state *curr_state;
 	PIT0 represents the timer to continually poll the LED
 */
 void PIT0_IRQHandler(void) {
-		PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
-		PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
+	LEDBlue_Toggle();
+	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
+	PIT->CHANNEL[0].TCTRL = 3 ;
 }
 
 /*
@@ -30,7 +32,7 @@ void setup_led_timer(void) {
 	PIT->MCR = 0;
 
 	NVIC_EnableIRQ(PIT0_IRQn);
-	PIT->CHANNEL[0].LDVAL = DEFAULT_SYSTEM_CLOCK * 2;
+	PIT->CHANNEL[0].LDVAL = BLUE_LED_DELAY;
 	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
 	PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
 }
@@ -125,8 +127,9 @@ int main(){
 	LED_Initialize();
 	init_accel_values();
 	init_plane_state();
+	
+	setup_led_timer();
 	init_waypoint();
-	//setup_led_timer();
 	
 	// continuously poll the accelerometer
 	int j = 0;
@@ -162,13 +165,6 @@ int main(){
 			LED_Off();
 		}
 
-		if (j % 1000 == 0) {
-			//printf("speed: %f, altitude: %f x: %f, y: %f \r", curr_state -> velocity, curr_state->pos->z, curr_state->pos->x, curr_state->pos->y);
-//			printf("relative: %f, %f, %f \r\n", relative->x,relative->y,relative->z);
-//			printf("state: %d, %d, %d \r\n", state.x,state.y,state.z);
-//			printf("stationary: %d, %d, %d \r\n", x_0,y_0,z_0);
-//			debug_printf("----------------------\r\n");
-		}
 		free(relative);
 		for (int i = 0; i < 100000; i++);
 	}
