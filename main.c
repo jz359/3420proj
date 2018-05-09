@@ -147,9 +147,17 @@ int main(){
 		
 		update_nearest_waypoint();
 		
+		int flag = did_hit_waypoint();
+		
 		// light up if nearby
 		if (is_near_waypoint()) {
 			LEDBlue_On();
+		} else {
+			LED_Off();
+		}
+		
+		if (is_on_waypoint()) {
+			LEDGreen_On();
 		} else {
 			LED_Off();
 		}
