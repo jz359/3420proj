@@ -21,7 +21,6 @@ volatile float dist_to_closest = 0;
 */
 void PIT0_IRQHandler(void) {
 	LEDBlue_Toggle();
-	printf("%f \n", dist_to_closest);
 	PIT->CHANNEL[0].LDVAL = calc_flash_delay(dist_to_closest);
 	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
 	PIT->CHANNEL[0].TCTRL = 3;
@@ -160,12 +159,16 @@ int main(){
 			NVIC_EnableIRQ(PIT0_IRQn);
 		} else {
 			NVIC_DisableIRQ(PIT0_IRQn);
+			LEDBlue_Off();
 		}
 		
+		// light up green if good
 		if (is_on_waypoint()) {
 			LEDGreen_On();
+			NVIC_DisableIRQ(PIT0_IRQn);
 		} else {
-			LED_Off();
+			LEDGreen_Off();
+			NVIC_EnableIRQ(PIT0_IRQn);
 		}
 
 		free(relative);

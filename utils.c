@@ -57,6 +57,19 @@ void LEDRed_On (void) {
 	__set_PRIMASK(m);
 }
 
+void LEDRed_Off (void) {
+	// Save and disable interrupts (for atomic LED change)
+	uint32_t m;
+	m = __get_PRIMASK();
+	__disable_irq();
+	
+  PTB->PSOR   = 1 << 22;   /* Red LED On*/
+	
+	// Restore interrupts
+	__set_PRIMASK(m);
+}
+
+
 /*----------------------------------------------------------------------------
   Function that turns on Green LED & all the others off
  *----------------------------------------------------------------------------*/
@@ -74,6 +87,18 @@ void LEDGreen_On (void) {
 	__set_PRIMASK(m);
 }
 
+void LEDGreen_Off (void) {
+	// Save and disable interrupts (for atomic LED change)
+	uint32_t m;
+	m = __get_PRIMASK();
+	__disable_irq();
+	
+  PTE->PSOR   = 1 << 26;   /* Green LED On*/
+	
+	// Restore interrupts
+	__set_PRIMASK(m);
+}
+
 /*----------------------------------------------------------------------------
   Function that turns on Blue LED & all the others off
  *----------------------------------------------------------------------------*/
@@ -86,6 +111,17 @@ void LEDBlue_On (void) {
   PTE->PSOR   = 1 << 26;   /* Green LED Off*/
   PTB->PSOR   = 1 << 22;   /* Red LED Off*/
   PTB->PCOR   = 1 << 21;   /* Blue LED On*/
+	
+	// Restore interrupts
+	__set_PRIMASK(m);
+}
+
+void LEDBlue_Off (void) {
+	// Save and disable interrupts (for atomic LED change)
+	uint32_t m;
+	m = __get_PRIMASK();
+	__disable_irq();
+  PTB->PSOR   = 1 << 21;   /* Blue LED On*/
 	
 	// Restore interrupts
 	__set_PRIMASK(m);
