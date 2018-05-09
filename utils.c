@@ -50,8 +50,6 @@ void LEDRed_On (void) {
 	__disable_irq();
 	
   PTB->PCOR   = 1 << 22;   /* Red LED On*/
-  PTB->PSOR   = 1 << 21;   /* Blue LED Off*/
-  PTE->PSOR   = 1 << 26;   /* Green LED Off*/
 	
 	// Restore interrupts
 	__set_PRIMASK(m);
@@ -79,10 +77,7 @@ void LEDGreen_On (void) {
 	m = __get_PRIMASK();
 	__disable_irq();
 	
-  PTB->PSOR   = 1 << 21;   /* Blue LED Off*/
   PTE->PCOR   = 1 << 26;   /* Green LED On*/
-  PTB->PSOR   = 1 << 22;   /* Red LED Off*/
-	
 	// Restore interrupts
 	__set_PRIMASK(m);
 }
@@ -108,8 +103,6 @@ void LEDBlue_On (void) {
 	m = __get_PRIMASK();
 	__disable_irq();
 	
-  PTE->PSOR   = 1 << 26;   /* Green LED Off*/
-  PTB->PSOR   = 1 << 22;   /* Red LED Off*/
   PTB->PCOR   = 1 << 21;   /* Blue LED On*/
 	
 	// Restore interrupts

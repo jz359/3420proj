@@ -156,20 +156,20 @@ int main(){
 		// light up if nearby
 		dist_to_closest = is_near_waypoint();
 		if (dist_to_closest > 0) {
-			NVIC_EnableIRQ(PIT0_IRQn);
+			// light up green if good
+			if (is_on_waypoint()) {
+				LEDGreen_On();
+				NVIC_DisableIRQ(PIT0_IRQn);
+			} else {
+				LEDGreen_Off();
+				NVIC_EnableIRQ(PIT0_IRQn);
+			}
 		} else {
 			NVIC_DisableIRQ(PIT0_IRQn);
 			LEDBlue_Off();
 		}
 		
-		// light up green if good
-		if (is_on_waypoint()) {
-			LEDGreen_On();
-			NVIC_DisableIRQ(PIT0_IRQn);
-		} else {
-			LEDGreen_Off();
-			NVIC_EnableIRQ(PIT0_IRQn);
-		}
+
 
 		free(relative);
 		for (int i = 0; i < 100000; i++);
