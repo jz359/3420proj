@@ -41,10 +41,10 @@ void init_waypoint(void) {
 	// TODO randomize the waypoint position
 	waypoint* wp = malloc(sizeof(waypoint));
 	wp->pos = malloc(sizeof(vector));
-	wp->pos->x = curr_state->pos->x;
+	wp->pos->x = curr_state->pos->x + 500;
 	wp->pos->y = curr_state->pos->y;
 	wp->pos->z = curr_state->pos->z;
-	wp->def_radius = 5000;
+	wp->def_radius = 500;
 	wp->near_radius = 1000;
 	wp->is_hit = 0;
 	wp->next = NULL;
@@ -99,6 +99,11 @@ int did_hit_waypoint(void) {
 	} else {
 		return 0;
 	}
+}
+
+int is_on_waypoint(void) {
+	int i = calc_distance(nearest_waypoint->pos, curr_state->pos) <= nearest_waypoint->def_radius;
+	return i;
 }
 
 /*

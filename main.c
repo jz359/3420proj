@@ -152,12 +152,20 @@ int main(){
 		
 		update_nearest_waypoint();
 		
+		int flag = did_hit_waypoint();
+		
 		// light up if nearby
 		dist_to_closest = is_near_waypoint();
 		if (dist_to_closest > 0) {
 			NVIC_EnableIRQ(PIT0_IRQn);
 		} else {
 			NVIC_DisableIRQ(PIT0_IRQn);
+		}
+		
+		if (is_on_waypoint()) {
+			LEDGreen_On();
+		} else {
+			LED_Off();
 		}
 
 		free(relative);
