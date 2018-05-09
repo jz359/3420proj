@@ -17,7 +17,6 @@ unsigned int BLUE_LED_DELAY = DEFAULT_SYSTEM_CLOCK;
 unsigned int BLUE_LED_DELAY_BASE = DEFAULT_SYSTEM_CLOCK / 10;
 unsigned int RED_LED_DELAY = 0;
 
-
 int toggled = 0;
 
 float calc_flash_delay(float percentage) {

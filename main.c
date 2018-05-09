@@ -14,8 +14,11 @@
 
 // volatile vector *curr_pos;
 volatile plane_state *curr_state;
-
 volatile float dist_to_closest = 0;
+vector* init_pos;
+
+float MAX_DISTANCE = 2000;
+
 /*
 	PIT0 represents the timer to continually poll the LED
 */
@@ -36,6 +39,10 @@ void setup_led_timer(void) {
 	PIT->CHANNEL[0].LDVAL = BLUE_LED_DELAY;
 	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
 	PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
+}
+
+int did_exceed_bounds() {
+	
 }
 
 float cvt_g_to_mm (float gforce) {
@@ -112,6 +119,11 @@ void init_plane_state(void) {
 	curr_state->pos->x = 0;
 	curr_state->pos->y = 0;
 	curr_state->pos->z = 20000;
+	
+	init_pos = malloc(sizeof(vector));
+	init_pos->x = curr_state->pos->x;
+	init_pos->y = curr_state->pos->y;
+	init_pos->z = curr_state->pos->z;
 }
 
 int main(){
@@ -169,7 +181,11 @@ int main(){
 			LEDBlue_Off();
 		}
 		
-
+		if (calc_distance(init_pos, curr_state->pos) > MAX_DISTANCE) {
+			LEDRed_On();
+		} else {
+			LEDRed_Off();
+		}
 
 		free(relative);
 		for (int i = 0; i < 100000; i++);
