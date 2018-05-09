@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "constants.h"
 #include "waypoint.h"
+#include "utils.h"
 
 #define PI 3.14159265
 
@@ -123,9 +124,12 @@ int main(){
 	// init stuff 
 	hardware_init();
 	Accelerometer_Initialize();
+	LED_Initialize();
 	init_accel_values();
 	init_plane_state();
+	
 	setup_led_timer();
+	init_waypoint();
 	
 	// continuously poll the accelerometer
 	int j = 0;
@@ -143,6 +147,15 @@ int main(){
 		relative->y = diff_y;
 		relative->z = diff_z;
 		update_plane_status(relative);
+		
+		update_nearest_waypoint();
+		
+		// light up if nearby
+		if (is_near_waypoint()) {
+			LEDBlue_On();
+		} else {
+			LED_Off();
+		}
 
 		free(relative);
 		for (int i = 0; i < 100000; i++);
