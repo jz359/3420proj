@@ -27,6 +27,6 @@ initialize a waypoint randomly and add it to the list
 */
 void init_waypoint(void);
 void update_nearest_waypoint(void);
-int is_near_waypoint(void);
+float is_near_waypoint(void);
 int did_hit_waypoint(void);
 // void hit_waypoint(waypoint* wp);

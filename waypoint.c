@@ -83,9 +83,12 @@ void update_nearest_waypoint(void) {
 	}
 }
 
-int is_near_waypoint(void) {
+float is_near_waypoint(void) {
 	float d = calc_distance(nearest_waypoint->pos, curr_state->pos);
-	return (d <= nearest_waypoint->near_radius);
+	if (d <= nearest_waypoint->near_radius) {
+		return d/nearest_waypoint->near_radius;
+	} 
+	return -1.;
 }
 
 int did_hit_waypoint(void) {

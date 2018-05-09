@@ -15,13 +15,16 @@
 // volatile vector *curr_pos;
 volatile plane_state *curr_state;
 
+volatile float dist_to_closest = 0;
 /*
 	PIT0 represents the timer to continually poll the LED
 */
 void PIT0_IRQHandler(void) {
 	LEDBlue_Toggle();
+	printf("%f \n", dist_to_closest);
+	PIT->CHANNEL[0].LDVAL = calc_flash_delay(dist_to_closest);
 	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
-	PIT->CHANNEL[0].TCTRL = 3 ;
+	PIT->CHANNEL[0].TCTRL = 3;
 }
 
 /*
@@ -31,7 +34,6 @@ void setup_led_timer(void) {
 	SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
 	PIT->MCR = 0;
 
-	NVIC_EnableIRQ(PIT0_IRQn);
 	PIT->CHANNEL[0].LDVAL = BLUE_LED_DELAY;
 	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
 	PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
@@ -127,7 +129,7 @@ int main(){
 	LED_Initialize();
 	init_accel_values();
 	init_plane_state();
-	
+
 	setup_led_timer();
 	init_waypoint();
 	
@@ -151,10 +153,11 @@ int main(){
 		update_nearest_waypoint();
 		
 		// light up if nearby
-		if (is_near_waypoint()) {
-			LEDBlue_On();
+		dist_to_closest = is_near_waypoint();
+		if (dist_to_closest > 0) {
+			NVIC_EnableIRQ(PIT0_IRQn);
 		} else {
-			LED_Off();
+			NVIC_DisableIRQ(PIT0_IRQn);
 		}
 
 		free(relative);
