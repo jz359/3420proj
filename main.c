@@ -42,7 +42,7 @@ void setup_led_timer(void) {
 }
 
 int did_exceed_bounds() {
-	
+	return (calc_distance(init_pos, curr_state->pos) > MAX_DISTANCE);
 }
 
 float cvt_g_to_mm (float gforce) {
@@ -82,7 +82,7 @@ void calculate_roll(float x) {
 	curr_state->pos->x += curr_state->velocity * 0.5 * cos(heading*PI) * TIME_UNIT;
 	curr_state->pos->y += curr_state->velocity * 0.5 * sin(heading*PI) * TIME_UNIT;
 
-	printf("roll: %f, heading: %f diff: %f x: %f, y: %f \r", percentage, heading * 180 / PI, diff, curr_state->pos->x, curr_state->pos->y);
+	//printf("roll: %f, heading: %f diff: %f x: %f, y: %f \r", percentage, heading * 180 / PI, diff, curr_state->pos->x, curr_state->pos->y);
 }
 
 /*
@@ -162,6 +162,9 @@ int main(){
 		update_plane_status(relative);
 		
 		update_nearest_waypoint();
+		get_angle_nearest_waypoint();
+		
+		printf("ANGLE_WP: %f\r\n", angle_next_wp);
 		
 		int flag = did_hit_waypoint();
 		
@@ -181,7 +184,7 @@ int main(){
 			LEDBlue_Off();
 		}
 		
-		if (calc_distance(init_pos, curr_state->pos) > MAX_DISTANCE) {
+		if (did_exceed_bounds()) {
 			LEDRed_On();
 		} else {
 			LEDRed_Off();
