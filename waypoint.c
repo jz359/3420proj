@@ -40,15 +40,20 @@ void push_tail_waypoint(waypoint *wp) {
 void init_waypoint(void) {
 	// TODO randomize the waypoint position
 	waypoint* wp = malloc(sizeof(waypoint));
+	wp->pos = malloc(sizeof(vector));
 	wp->pos->x = 0;
 	wp->pos->y = 0;
-	wp->pos->z = 0;
-	wp->def_radius = 3;
-	wp->near_radius = 5;
+	wp->pos->z = 20000;
+	wp->def_radius = 1000;
+	wp->near_radius = 4000;
 	wp->is_hit = 0;
 	wp->next = NULL;
 
 	push_tail_waypoint(wp);
+	
+	if (!nearest_waypoint) {
+		nearest_waypoint = wp;
+	}
 }
 
 void update_nearest_waypoint(void) {
