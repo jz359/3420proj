@@ -141,6 +141,9 @@ int main(){
 	init_plane_state();
 
 	setup_led_timer();
+	
+	// TODO initialize a set number of waypoints
+	init_waypoint();
 	init_waypoint();
 	
 	// continuously poll the accelerometer
@@ -202,5 +205,8 @@ int main(){
 	}
 	
 	// TODO include end of game code, like printing out the time or something
+	while(1) {
+		LEDGreen_Toggle();
+		printf("Done!");
 }
 
