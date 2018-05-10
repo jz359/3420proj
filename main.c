@@ -163,8 +163,8 @@ int main(){
 		
 		update_nearest_waypoint();
 		get_angle_nearest_waypoint();
-		
-		printf("ANGLE_WP: %f\r\n", angle_next_wp);
+		printf("ANGLE_WP: %f, heading: %f x: %f, y: %f \r", angle_next_wp, curr_state->heading * 180 / PI, curr_state->pos->x, curr_state->pos->y);
+		//printf("ANGLE_WP: %f\r\n", angle_next_wp);
 		
 		int flag = did_hit_waypoint();
 		

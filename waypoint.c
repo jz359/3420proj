@@ -119,8 +119,8 @@ void get_angle_nearest_waypoint(void) {
 	float x = nearest_waypoint->pos->x - curr_state->pos->x;
 	float y = nearest_waypoint->pos->y - curr_state->pos->y;
 	
-	//angle_next_wp = atan2(y, x) * 180.0 / PI - curr_state->heading;
-	angle_next_wp = atan2(y, x) * 180.0 / PI;
+	angle_next_wp = atan2(y, x) * 180.0 / PI - curr_state->heading;
+	//angle_next_wp = atan2(y, x) * 180.0 / PI;
 	/*
 	if (angle_next_wp > 180) {
 		angle_next_wp = 360 - angle_next_wp;
