@@ -40,7 +40,12 @@ void setup_led_timer(void) {
 }
 
 int did_exceed_bounds() {
-	return (calc_distance(init_pos, curr_state->pos) > MAX_DISTANCE);
+	//return (calc_distance(init_pos, curr_state->pos) > MAX_DISTANCE);
+	int x_exceed = curr_state->pos->x > 2000 || curr_state->pos->x < 0;
+	int y_exceed = curr_state->pos->y > 2000 || curr_state->pos->y < 0;
+	int z_exceed = curr_state->pos->z > 22000 || curr_state->pos->z < 0;
+	
+	return (x_exceed > 0 || y_exceed > 0 || z_exceed > 0);
 }
 
 float cvt_g_to_mm (float gforce) {
@@ -80,8 +85,8 @@ void calculate_roll(float x) {
 	curr_state->pos->x += curr_state->velocity * 0.5 * cos(heading*PI) * TIME_UNIT;
 	curr_state->pos->y += curr_state->velocity * 0.5 * sin(heading*PI) * TIME_UNIT;
 
-	printf("{roll: %f, heading: %f diff: %f x: %f, y: %f, z: %f, nearest_waypoint: {x: %f, y: %f, z: %f}}\r", 
-		percentage, heading * 180 / PI, diff, curr_state->pos->x, curr_state->pos->y, curr_state->pos->z,
+	printf("{'heading': %f, 'x': %f, 'y': %f, 'z': %f, 'nearest_waypoint': {'x': %f, 'y': %f, 'z': %f}}\r\n", 
+		heading * 180 / PI, curr_state->pos->x, curr_state->pos->y, curr_state->pos->z,
 		nearest_waypoint->pos->x, nearest_waypoint->pos->y, nearest_waypoint->pos->z);
 }
 
@@ -159,10 +164,28 @@ int main(){
 		relative->z = diff_z;
 		update_plane_status(relative);
 		
-		update_nearest_waypoint();
+		//update_nearest_waypoint();
 		
 		int flag = did_hit_waypoint();
 		
+		if (flag) {
+			LEDGreen_On();
+			LEDBlue_Off();
+			NVIC_DisableIRQ(PIT0_IRQn);
+			init_waypoint();
+		} else {
+			LEDGreen_Off();
+			
+			dist_to_closest = is_near_waypoint();
+			if (dist_to_closest > 0) {
+				NVIC_EnableIRQ(PIT0_IRQn);
+			} else {
+				NVIC_DisableIRQ(PIT0_IRQn);
+				LEDBlue_Off();
+			}
+		}
+		
+		/*
 		// light up if nearby
 		dist_to_closest = is_near_waypoint();
 		if (dist_to_closest > 0) {
@@ -179,6 +202,7 @@ int main(){
 			NVIC_DisableIRQ(PIT0_IRQn);
 			LEDBlue_Off();
 		}
+		*/
 		
 		if (did_exceed_bounds()) {
 			LEDRed_On();
