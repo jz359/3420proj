@@ -1,4 +1,5 @@
 #include "waypoint.h"
+#include <stdlib.h>
 
 // helpers
 /*
@@ -38,11 +39,10 @@ void push_tail_waypoint(waypoint *wp) {
 // /helpers
 
 void init_waypoint(void) {
-	// TODO randomize the waypoint position
 	waypoint* wp = malloc(sizeof(waypoint));
 	wp->pos = malloc(sizeof(vector));
-	wp->pos->x = curr_state->pos->x + 400;
-	wp->pos->y = curr_state->pos->y;
+	wp->pos->x = curr_state->pos->x + (rand() % 1600);
+	wp->pos->y = curr_state->pos->y + (rand() % 1600);
 	wp->pos->z = curr_state->pos->z;
 	wp->def_radius = 200;
 	wp->near_radius = 400;
@@ -119,14 +119,14 @@ void get_angle_nearest_waypoint(void) {
 	float x = nearest_waypoint->pos->x - curr_state->pos->x;
 	float y = nearest_waypoint->pos->y - curr_state->pos->y;
 	
-	angle_next_wp = atan2(y, x) * 180.0 / PI - curr_state->heading;
 	//angle_next_wp = atan2(y, x) * 180.0 / PI;
-	/*
+	
+	angle_next_wp = atan2(y, x) * 180.0 / PI - curr_state->heading;
 	if (angle_next_wp > 180) {
 		angle_next_wp = 360 - angle_next_wp;
 	} else if (angle_next_wp < -180) {
 		angle_next_wp = 360 + angle_next_wp;
-	}*/
+	}
 }
 
 /*

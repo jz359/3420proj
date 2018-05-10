@@ -1,5 +1,4 @@
 #include <fsl_device_registers.h>
-#include <stdlib.h>
 #include <math.h>
 #include "board_accelerometer.h"
 #include "fsl_debug_console.h"
@@ -191,7 +190,17 @@ int main(){
 		}
 
 		free(relative);
+		
+		if (waypoints_hit == TOTAL_WAYPOINTS) {
+			// flash the green LED to indicate game over
+			// might want to print the time 
+			LEDGreen_On();
+			break;
+		}
+		
 		for (int i = 0; i < 100000; i++);
 	}
+	
+	// TODO include end of game code, like printing out the time or something
 }
 
