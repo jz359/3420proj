@@ -26,8 +26,8 @@ void push_tail_waypoint(waypoint *wp) {
 void init_waypoint(void) {
 	waypoint* wp = malloc(sizeof(waypoint));
 	wp->pos = malloc(sizeof(vector));
-	wp->pos->x = curr_state->pos->x + (rand() % 1200);
-	wp->pos->y = curr_state->pos->y + (rand() % 1200);
+	wp->pos->x = rand() % 2000;
+	wp->pos->y = rand() % 2000;
 	wp->pos->z = curr_state->pos->z;
 	wp->def_radius = 200;
 	wp->near_radius = 400;
