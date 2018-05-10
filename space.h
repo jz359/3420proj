@@ -8,7 +8,6 @@ typedef struct space_state {
 } vector;
 
 typedef struct plane_state {
-	float fuel;
 	float velocity;
 	float heading;
 	vector *pos;

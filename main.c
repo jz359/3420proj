@@ -1,5 +1,4 @@
 #include <fsl_device_registers.h>
-#include <stdlib.h>
 #include <math.h>
 #include "board_accelerometer.h"
 #include "fsl_debug_console.h"
@@ -8,7 +7,6 @@
 #include "utils.h"
 #include "constants.h"
 #include "waypoint.h"
-#include "utils.h"
 
 #define PI 3.14159265
 
@@ -82,7 +80,9 @@ void calculate_roll(float x) {
 	curr_state->pos->x += curr_state->velocity * 0.5 * cos(heading*PI) * TIME_UNIT;
 	curr_state->pos->y += curr_state->velocity * 0.5 * sin(heading*PI) * TIME_UNIT;
 
-	//printf("roll: %f, heading: %f diff: %f x: %f, y: %f \r", percentage, heading * 180 / PI, diff, curr_state->pos->x, curr_state->pos->y);
+	printf("{roll: %f, heading: %f diff: %f x: %f, y: %f, z: %f, nearest_waypoint: {x: %f, y: %f, z: %f}}\r", 
+		percentage, heading * 180 / PI, diff, curr_state->pos->x, curr_state->pos->y, curr_state->pos->z,
+		nearest_waypoint->pos->x, nearest_waypoint->pos->y, nearest_waypoint->pos->z);
 }
 
 /*
@@ -90,7 +90,6 @@ void calculate_roll(float x) {
 */
 void update_plane_status(vector *state) {
 	// vector new_vec = get_vectorized(state);
-	curr_state->fuel -= FUEL_LOSS;
 	calculate_pitch(state->y);
 	calculate_roll(state->x);
 }
@@ -111,7 +110,6 @@ void init_accel_values(void) {
 
 void init_plane_state(void) {
 	curr_state = malloc(sizeof(plane_state));
-	curr_state->fuel = 100;
 	curr_state->velocity = 100;
 	curr_state->heading = 0;
 	
@@ -162,9 +160,6 @@ int main(){
 		update_plane_status(relative);
 		
 		update_nearest_waypoint();
-		get_angle_nearest_waypoint();
-		
-		printf("ANGLE_WP: %f\r\n", angle_next_wp);
 		
 		int flag = did_hit_waypoint();
 		
@@ -172,9 +167,10 @@ int main(){
 		dist_to_closest = is_near_waypoint();
 		if (dist_to_closest > 0) {
 			// light up green if good
-			if (is_on_waypoint()) {
+			if (flag) {
 				LEDGreen_On();
 				NVIC_DisableIRQ(PIT0_IRQn);
+				init_waypoint();
 			} else {
 				LEDGreen_Off();
 				NVIC_EnableIRQ(PIT0_IRQn);
@@ -191,6 +187,13 @@ int main(){
 		}
 
 		free(relative);
+		
+		if (waypoints_hit == TOTAL_WAYPOINTS) {
+			LEDGreen_On();
+			printf("DONE");
+			break;
+		}
+		
 		for (int i = 0; i < 100000; i++);
 	}
 }
