@@ -132,19 +132,21 @@ void get_angle_nearest_waypoint(void) {
 }
 
 void free_waypoint(void) {
-	if (nearest_waypoint->prev) {
-		nearest_waypoint->prev->next = nearest_waypoint->next;
+	
+	waypoint* temp = nearest_waypoint;
+	
+	// reset the nearest waypoint to a temporary value
+	if(temp->next) nearest_waypoint = temp->next;
+	else if (temp->prev) nearest_waypoint = temp->prev;
+	else nearest_waypoint = NULL;
+	
+	if (temp->prev) {
+		temp->prev->next = temp->next;
 	}
 
-	if(nearest_waypoint->next) {
-		nearest_waypoint->next->prev = nearest_waypoint->prev;
+	if(temp->next) {
+		temp->next->prev = temp->prev;
 	}
-
-	free(wp);
+	
+	free(temp);
 }
-
-/*
-void hit_waypoint(waypoint* wp) {
-	wp->is_hit = 1;
-	waypoints_hit += 1;
-}*/
