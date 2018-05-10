@@ -128,21 +128,21 @@ int main(){
 
 	init_waypoints();
 
-	print_to_serial(); // print initial state to serial
-	while (!calibrated); // wait to start game and calibrate
+	//print_to_serial(); // print initial state to serial
+	//while (!calibrated); // wait to start game and calibrate
 
 	// test boundary conditions
 	curr_state->pos->x = 2001;
-	printf("Bound check should be 1: %d\n", did_exceed_bounds());
+	printf("Bound check should be 1: %d\r\n", did_exceed_bounds());
 	curr_state->pos->x = BOARD_SIZE /2;
 
 	curr_state->velocity = 1;
-	printf("Bound check should be 1: %d\n", did_exceed_bounds());
+	printf("Bound check should be 1: %d\r\n", did_exceed_bounds());
 	curr_state->velocity = 400;
 
 	time_remaining->minutes = 0;
 	time_remaining->seconds = 0;
-	printf("Bound check should be 1: %d\n", did_exceed_bounds());
+	printf("Bound check should be 1: %d\r\n", did_exceed_bounds());
 	time_remaining->minutes = 2;
 	
 	// test waypoint hit logic
@@ -150,14 +150,14 @@ int main(){
 	nearest_waypoint->pos->y = BOARD_SIZE / 2;
 	nearest_waypoint->pos->z = 2000;
 	int flag = did_hit_waypoint();
-	printf("Waypoint hit should be 1: %d, Waypoints hit should be 1: %d, Time remaining should be 2min45sec: %d:%d\n", 
+	printf("Waypoint hit should be 1: %d, Waypoints hit should be 1: %d, Time remaining should be 2min45sec: %d:%d\r\n", 
 		flag, waypoints_hit, time_remaining->minutes, time_remaining->seconds);
 
 	// test end-game logic
 	nearest_waypoint->pos->x = BOARD_SIZE / 2;
 	nearest_waypoint->pos->y = BOARD_SIZE / 2;
 	nearest_waypoint->pos->z = 2000;
-	int flag = did_hit_waypoint();
-	printf("Waypoint hit should be 1: %d, Waypoints hit should be 2: %d, Time remaining should be 2min45sec: %d:%d\n", 
+	flag = did_hit_waypoint();
+	printf("Waypoint hit should be 1: %d, Waypoints hit should be 2: %d, Time remaining should be 2min45sec: %d:%d\r\n", 
 		flag, waypoints_hit, time_remaining->minutes, time_remaining->seconds);
 }
