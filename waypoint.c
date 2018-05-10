@@ -116,20 +116,17 @@ float dot_product(vector* v1, vector* v2) {
 } */
 
 void get_angle_nearest_waypoint(void) {
-	
-	/*
-	vector* v1 = curr_state->pos;
-	vector* v2 = nearest_waypoint->pos;
-	
-	float dp = dot_product(v1, v2);
-	float norm_prod = vector_to_norm(v1) * vector_to_norm(v2);
-	
-	angle_next_wp = acos(dp/norm_prod) * 180.0 / PI;*/
-	
 	float x = nearest_waypoint->pos->x - curr_state->pos->x;
 	float y = nearest_waypoint->pos->y - curr_state->pos->y;
 	
+	//angle_next_wp = atan2(y, x) * 180.0 / PI - curr_state->heading;
 	angle_next_wp = atan2(y, x) * 180.0 / PI;
+	/*
+	if (angle_next_wp > 180) {
+		angle_next_wp = 360 - angle_next_wp;
+	} else if (angle_next_wp < -180) {
+		angle_next_wp = 360 + angle_next_wp;
+	}*/
 }
 
 /*
