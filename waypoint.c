@@ -1,5 +1,4 @@
 #include "waypoint.h"
-#include <stdlib.h>
 
 // helpers
 /*
@@ -31,6 +30,7 @@ void push_tail_waypoint(waypoint *wp) {
 
 	if (waypoint_tail) {
 		waypoint_tail->next = wp;
+		wp->prev = waypoint_tail;
 	}
 
 	waypoint_tail = wp;
@@ -39,15 +39,17 @@ void push_tail_waypoint(waypoint *wp) {
 // /helpers
 
 void init_waypoint(void) {
+	// TODO randomize the waypoint position
 	waypoint* wp = malloc(sizeof(waypoint));
 	wp->pos = malloc(sizeof(vector));
-	wp->pos->x = curr_state->pos->x + (rand() % 1600);
-	wp->pos->y = curr_state->pos->y + (rand() % 1600);
+	wp->pos->x = curr_state->pos->x + 400;
+	wp->pos->y = curr_state->pos->y;
 	wp->pos->z = curr_state->pos->z;
 	wp->def_radius = 200;
 	wp->near_radius = 400;
 	wp->is_hit = 0;
 	wp->next = NULL;
+	wp->prev = NULL;
 
 	push_tail_waypoint(wp);
 	
@@ -101,12 +103,12 @@ int did_hit_waypoint(void) {
 	}
 }
 
+/*
 int is_on_waypoint(void) {
 	int i = calc_distance(nearest_waypoint->pos, curr_state->pos) <= nearest_waypoint->def_radius;
 	return i;
 }
 
-/*
 float vector_to_norm(vector* v) {
 		return (v->x * v->x + v->y*v->y + v->z*v->z);
 }
@@ -119,14 +121,26 @@ void get_angle_nearest_waypoint(void) {
 	float x = nearest_waypoint->pos->x - curr_state->pos->x;
 	float y = nearest_waypoint->pos->y - curr_state->pos->y;
 	
-	//angle_next_wp = atan2(y, x) * 180.0 / PI;
-	
 	angle_next_wp = atan2(y, x) * 180.0 / PI - curr_state->heading;
+	//angle_next_wp = atan2(y, x) * 180.0 / PI;
+	/*
 	if (angle_next_wp > 180) {
 		angle_next_wp = 360 - angle_next_wp;
 	} else if (angle_next_wp < -180) {
 		angle_next_wp = 360 + angle_next_wp;
+	}*/
+}
+
+void free_waypoint(void) {
+	if (nearest_waypoint->prev) {
+		nearest_waypoint->prev->next = nearest_waypoint->next;
 	}
+
+	if(nearest_waypoint->next) {
+		nearest_waypoint->next->prev = nearest_waypoint->prev;
+	}
+
+	free(wp);
 }
 
 /*

@@ -163,7 +163,6 @@ int main(){
 		update_nearest_waypoint();
 		get_angle_nearest_waypoint();
 		printf("ANGLE_WP: %f, heading: %f x: %f, y: %f \r", angle_next_wp, curr_state->heading * 180 / PI, curr_state->pos->x, curr_state->pos->y);
-		//printf("ANGLE_WP: %f\r\n", angle_next_wp);
 		
 		int flag = did_hit_waypoint();
 		
@@ -171,9 +170,10 @@ int main(){
 		dist_to_closest = is_near_waypoint();
 		if (dist_to_closest > 0) {
 			// light up green if good
-			if (is_on_waypoint()) {
+			if (flag) {
 				LEDGreen_On();
 				NVIC_DisableIRQ(PIT0_IRQn);
+				free_waypoint();
 			} else {
 				LEDGreen_Off();
 				NVIC_EnableIRQ(PIT0_IRQn);
