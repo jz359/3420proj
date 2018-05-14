@@ -8,18 +8,12 @@ typedef struct space_state {
 } vector;
 
 typedef struct plane_state {
-	float fuel;
 	float velocity;
 	float heading;
 	vector *pos;
 } plane_state;
 
-
-// struct space_state;
-// typedef struct space_state vector;
-
-// volatile extern vector *curr_pos;
-volatile extern plane_state *curr_state;
+extern plane_state *curr_state;
 
 void setup_led_timer(void);
 

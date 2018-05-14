@@ -7,12 +7,12 @@
 
 struct waypoint_type {
 	vector* pos;
+	vector* near_pos;
 	float def_radius;
 	float near_radius;
 	unsigned int is_hit;
 
 	struct waypoint_type* next;
-	struct waypoint_type* prev;
 };
 
 typedef struct waypoint_type waypoint;
@@ -34,5 +34,4 @@ float is_near_waypoint(void);
 int did_hit_waypoint(void);
 //int is_on_waypoint(void);
 void get_angle_nearest_waypoint(void);
-void free_waypoint(void);
 // void hit_waypoint(waypoint* wp);
