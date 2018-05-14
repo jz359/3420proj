@@ -21,7 +21,7 @@ def calc_point(point):
 
 # define a main function
 def main():
-    ser = serial.Serial('COM3', 115200, timeout=2)
+    ser = serial.Serial('COM7', 115200, timeout=2)
 
     pygame.init()
     pygame.font.init()
@@ -39,11 +39,15 @@ def main():
             if event.type == pygame.QUIT:
                 os._exit(0)
         line = ser.readline()
+        print line
         try:
             data = ast.literal_eval(line)
         except:
             continue
         screen.fill(WHITE)  
+        # print data
+        timer_data = data['time']
+        print timer_data;
         
         pygame.draw.circle(screen, RED, [calc_point(data['x']),calc_point(data['y'])], 15, 0)
 

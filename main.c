@@ -1,7 +1,6 @@
 #include <fsl_device_registers.h>
 #include <math.h>
 #include "board_accelerometer.h"
-#include "fsl_debug_console.h"
 #include "board.h"
 
 #include "utils.h"
@@ -10,10 +9,15 @@
 
 #define PI 3.14159265
 
-// volatile vector *curr_pos;
-volatile plane_state *curr_state;
+typedef struct time_t {
+	unsigned int minutes;
+	unsigned int seconds;
+} time_t;
+
+plane_state *curr_state;
 volatile float dist_to_closest = 0;
 vector* init_pos;
+volatile time_t time_remaining = {1, 0};
 
 float MAX_DISTANCE = 2000;
 
@@ -28,24 +32,45 @@ void PIT0_IRQHandler(void) {
 }
 
 /*
+	PIT1 represents the timer to update the timer
+*/
+void PIT1_IRQHandler(void) {
+	__disable_irq();
+	int total = time_remaining.minutes * 60 + time_remaining.seconds - 1;
+	
+	time_remaining.minutes = total < 0 ? 0 : total / 60;
+	time_remaining.seconds = total < 0 ? 0 : total % 60;
+	PIT->CHANNEL[1].TFLG = PIT_TFLG_TIF(1);
+	PIT->CHANNEL[1].TCTRL = 3;
+	__enable_irq();
+}
+
+/*
 	Code to setup the PIT0	
 */
 void setup_led_timer(void) {
 	SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
 	PIT->MCR = 0;
-
+	
+	NVIC_EnableIRQ(PIT0_IRQn);
+	NVIC_EnableIRQ(PIT1_IRQn);
+	
 	PIT->CHANNEL[0].LDVAL = BLUE_LED_DELAY;
 	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
 	PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
+	
+	PIT->CHANNEL[1].LDVAL = DEFAULT_SYSTEM_CLOCK*2; // 1 s timer
+	PIT->CHANNEL[1].TFLG = PIT_TFLG_TIF(1);
+	PIT->CHANNEL[1].TCTRL = 3 ; // start Timer 1
 }
 
 int did_exceed_bounds() {
 	//return (calc_distance(init_pos, curr_state->pos) > MAX_DISTANCE);
 	int x_exceed = curr_state->pos->x > 2000 || curr_state->pos->x < 0;
 	int y_exceed = curr_state->pos->y > 2000 || curr_state->pos->y < 0;
-	int z_exceed = curr_state->pos->z > 22000 || curr_state->pos->z < 0;
+	// int z_exceed = curr_state->pos->z > 2200 || curr_state->pos->z < 0;
 	
-	return (x_exceed > 0 || y_exceed > 0 || z_exceed > 0);
+	return (x_exceed > 0 || y_exceed > 0 || curr_state->velocity < 0);
 }
 
 float cvt_g_to_mm (float gforce) {
@@ -71,13 +96,13 @@ void calculate_pitch(float y) {
 
 void calculate_roll(float x) {
 	float percentage = x/grav;
-	float angle = -percentage*PI;
-	
-	float v = curr_state->velocity;
-	float rad = (v*v)/(tanf(angle)*grav*1000);
+	float angle = percentage*PI;
 	
 	float diff = (fabs(angle/100) > 0.01 ? angle/100 : 0)/5; //threshold val to detect change
-	curr_state->heading = fmod(curr_state->heading - diff, 2 * PI); 
+	
+	float updated = curr_state->heading - diff;
+	float new_heading = updated < 0 ? 2 * PI + updated : updated;
+	curr_state->heading = fmod(new_heading, 2 * PI); 
 
 	float heading = curr_state->heading;
 	
@@ -85,16 +110,15 @@ void calculate_roll(float x) {
 	curr_state->pos->x += curr_state->velocity * 0.5 * cos(heading*PI) * TIME_UNIT;
 	curr_state->pos->y += curr_state->velocity * 0.5 * sin(heading*PI) * TIME_UNIT;
 
-	printf("{'heading': %f, 'x': %f, 'y': %f, 'z': %f, 'nearest_waypoint': {'x': %f, 'y': %f, 'z': %f}}\r\n", 
+	printf("{'heading': %f, 'x': %f, 'y': %f, 'z': %f, 'nearest_waypoint': {'x': %f, 'y': %f, 'z': %f}, 'time': {'m': %d, 's': %d}}\r\n", 
 		heading * 180 / PI, curr_state->pos->x, curr_state->pos->y, curr_state->pos->z,
-		nearest_waypoint->pos->x, nearest_waypoint->pos->y, nearest_waypoint->pos->z);
+		nearest_waypoint->near_pos->x, nearest_waypoint->near_pos->y, nearest_waypoint->near_pos->z, time_remaining.minutes, time_remaining.seconds);
 }
 
 /*
 	Updates the plane status with the given vector
 */
 void update_plane_status(vector *state) {
-	// vector new_vec = get_vectorized(state);
 	calculate_pitch(state->y);
 	calculate_roll(state->x);
 }
@@ -115,13 +139,13 @@ void init_accel_values(void) {
 
 void init_plane_state(void) {
 	curr_state = malloc(sizeof(plane_state));
-	curr_state->velocity = 100;
+	curr_state->velocity = 300;
 	curr_state->heading = 0;
 	
 	curr_state->pos = malloc(sizeof(vector));
-	curr_state->pos->x = 0;
-	curr_state->pos->y = 0;
-	curr_state->pos->z = 20000;
+	curr_state->pos->x = BOARD_SIZE / 2;
+	curr_state->pos->y = BOARD_SIZE / 2;
+	curr_state->pos->z = 2000;
 	
 	init_pos = malloc(sizeof(vector));
 	init_pos->x = curr_state->pos->x;
@@ -130,13 +154,6 @@ void init_plane_state(void) {
 }
 
 int main(){
-	/*
-	curr_pos = malloc(sizeof(vector));
-	curr_pos->x = 0;
-	curr_pos->y = 0;
-	curr_pos->z = 0;
-	*/
-	
 	// init stuff 
 	hardware_init();
 	Accelerometer_Initialize();
@@ -206,6 +223,7 @@ int main(){
 		
 		if (did_exceed_bounds()) {
 			LEDRed_On();
+			printf("CRASH");
 		} else {
 			LEDRed_Off();
 		}

@@ -2,12 +2,12 @@
 #include "constants.h"
 #include <stdlib.h>
 #include <math.h>
-#include <stdlib.h>
 
 #define PI 3.14159265
 
 struct waypoint_type {
 	vector* pos;
+	vector* near_pos;
 	float def_radius;
 	float near_radius;
 	unsigned int is_hit;

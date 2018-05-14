@@ -24,12 +24,19 @@ void push_tail_waypoint(waypoint *wp) {
 // /helpers
 
 void init_waypoint(void) {
+	int neg = rand() % 2 == 0 ? 1 : -1;
+	int z = curr_state->pos->z + (neg * (rand() % 100));
+	
 	waypoint* wp = malloc(sizeof(waypoint));
 	wp->pos = malloc(sizeof(vector));
+	wp->near_pos = malloc(sizeof(vector));
 	wp->pos->x = rand() % 2000;
 	wp->pos->y = rand() % 2000;
-	wp->pos->z = curr_state->pos->z;
-	wp->def_radius = 200;
+	wp->pos->z = z < 0 ? -1 * z : z % 2200;
+	wp->def_radius = 75;
+	wp->near_pos->x = fmod((wp->pos->x + (neg * (rand() % 100))), 2000);
+	wp->near_pos->y = fmod((wp->pos->y + (neg * (rand() % 100))), 2000);
+	wp->near_pos->z = wp->pos->z; 
 	wp->near_radius = 400;
 	wp->is_hit = 0;
 	wp->next = NULL;
