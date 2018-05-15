@@ -1,6 +1,14 @@
 #ifndef __CONSTANTS_H__
 #define __CONSTANTS_H__
 #include <fsl_device_registers.h>
+#include <math.h>
+
+// holds the time information
+typedef struct time_s {
+	unsigned int minutes;
+	unsigned int seconds;
+} time_s;
+
 
 // stationary accelerations
 extern int x_0;
@@ -24,5 +32,7 @@ extern unsigned int RED_LED_DELAY;
 extern int toggled;
 
 float calc_flash_delay(float percentage);
+
+volatile extern time_s *time_remaining;
 
 #endif
