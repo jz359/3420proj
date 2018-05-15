@@ -1,5 +1,3 @@
-#include <time.h>
-
 #include "board_accelerometer.h"
 #include "board.h"
 
@@ -63,14 +61,9 @@ void setup_led_timer(void) {
 int did_exceed_bounds() {
 	int x_exceed = curr_state->pos->x > 2000 || curr_state->pos->x < 0;
 	int y_exceed = curr_state->pos->y > 2000 || curr_state->pos->y < 0;
-	// int z_exceed = curr_state->pos->z > 2200 || curr_state->pos->z < 0;
+	int time_exceeded = !time_remaining->minutes && !time_remaining->seconds;
 
-	return (x_exceed > 0 || y_exceed > 0 || curr_state->velocity < 0);
-}
-
-float cvt_g_to_mm (float gforce) {
-	float mm = 0.5 * 9.80665 * gforce * TIME_INT_S * TIME_INT_S;
-	return mm;
+	return (x_exceed > 0 || y_exceed > 0 || curr_state->pos->z <= 0 || curr_state->velocity < 50 || time_exceeded);
 }
 
 /*
@@ -85,7 +78,7 @@ float calc_distance(vector *state, vector *state2) {
 
 void calculate_pitch(float y) {
 	float percentage = y/grav;
-	curr_state->velocity -= percentage * 0.05;
+	curr_state->velocity -= percentage * 0.1;
 	curr_state->pos->z +=  curr_state->velocity * 0.5 * percentage * TIME_UNIT;
 }
 
@@ -119,12 +112,11 @@ void update_plane_status(vector *state) {
 	Initializes the acceleration values in x_0, y_0, z_0 so we get an accurate relative acceleration
 */
 void init_game_values(void) {
-	//srand((unsigned int)time(NULL));
-	
 	Accelerometer_GetState(&state);
 	x_0 = state.x;
 	y_0 = state.y;
 	z_0 = state.z;
+	srand(state.z);
 	grav = ((float)state.z)/DIV_CONST;
 	
 	time_remaining = malloc(sizeof(time_s));
@@ -146,6 +138,7 @@ void init_plane_state(void) {
 
 int main(){
 	// init stuff
+	
 	hardware_init();
 	Accelerometer_Initialize();
 	LED_Initialize();
@@ -156,21 +149,18 @@ int main(){
 	init_waypoint();
 
 	// continuously poll the accelerometer
-	int j = 0;
 	while(1) {
-		j++;
 		Accelerometer_GetState(&state);
 
 		// calculate the relative accelerations
-		float diff_x = ((float)(state.x - x_0))/DIV_CONST;
-		float diff_y = ((float)(state.y - y_0))/DIV_CONST;
-		float diff_z = ((float)(state.z - z_0))/DIV_CONST;
-
 		vector *relative = malloc(sizeof(vector));
-		relative->x = diff_x;
-		relative->y = diff_y;
-		relative->z = diff_z;
+		relative->x = ((float)(state.x - x_0))/DIV_CONST;
+		relative->y = ((float)(state.y - y_0))/DIV_CONST;
+		relative->z = ((float)(state.z - z_0))/DIV_CONST;
+		
+		// update the plane's status 
 		update_plane_status(relative);
+		free(relative);
 		
 		// make printing to serial atomic
 		__disable_irq();
@@ -179,11 +169,7 @@ int main(){
 		nearest_waypoint->near_pos->x, nearest_waypoint->near_pos->y, nearest_waypoint->near_pos->z, nearest_waypoint->near_radius, waypoints_hit, time_remaining->minutes, time_remaining->seconds);
 		__enable_irq();
 
-		//update_nearest_waypoint();
-
-		int flag = did_hit_waypoint();
-
-		if (flag) {
+		if (did_hit_waypoint()) {
 			LEDGreen_On();
 			LEDBlue_Off();
 			NVIC_DisableIRQ(PIT0_IRQn);
@@ -223,11 +209,7 @@ int main(){
 			LEDRed_On();
 			printf("CRASH");
 			break;
-		} else {
-			LEDRed_Off();
 		}
-
-		free(relative);
 
 		if (waypoints_hit == TOTAL_WAYPOINTS) {
 			LEDGreen_On();

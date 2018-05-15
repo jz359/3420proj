@@ -41,8 +41,8 @@ def main():
                 os._exit(0)
         line = ser.readline()
         if line == "DONE" or line == "CRASH":
-            print "lol"
-            textsurface = announce_font.render(line, False, (0, 0, 0))
+            text = "YOU LOST" if line == "CRASH" else "YOU WIN!"
+            textsurface = announce_font.render(text, False, (0, 0, 0))
             screen.blit(textsurface,(X/2 + PADDING, Y/2 + PADDING))
         else:
             try:
@@ -83,6 +83,6 @@ def main():
             textsurface = text_font.render('Waypoints:' + str(data['wp_hit']) + "/10", False, (0, 0, 0))
             screen.blit(textsurface,(X - 100 - PADDING*2 + TEXT_PADDING, PADDING + TEXT_PADDING*16))
 
-            pygame.display.flip()
+        pygame.display.flip()
       
 main()
