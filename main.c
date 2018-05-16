@@ -86,7 +86,7 @@ void calculate_roll(float x) {
 	float percentage = x/grav;
 	float angle = percentage*PI;
 
-	float diff = (fabs(angle/100) > 0.01 ? angle/100 : 0)/5; //threshold val to detect change
+	float diff = (fabs(angle/100) > 0.01 ? angle/100 : 0); //threshold val to detect change
 
 	float updated = curr_state->heading - diff;
 	float new_heading = updated < 0 ? 2 * PI + updated : updated;
@@ -94,9 +94,8 @@ void calculate_roll(float x) {
 
 	float heading = curr_state->heading;
 
-	//float diff = curr_state->velocity * 0.5 * cosf(heading) * TIME_UNIT;
-	curr_state->pos->x += curr_state->velocity * 0.5 * cos(heading*PI) * TIME_UNIT;
-	curr_state->pos->y += curr_state->velocity * 0.5 * sin(heading*PI) * TIME_UNIT;
+	curr_state->pos->x += curr_state->velocity * 0.5 * cos(heading) * TIME_UNIT;
+	curr_state->pos->y += curr_state->velocity * 0.5 * sin(heading) * TIME_UNIT;
 }
 
 /*
