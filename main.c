@@ -58,9 +58,10 @@ void init_game_values(void) {
 	
 }
 
+// initializes the plane's position and velocity on the board
 void init_plane_state(void) {
 	curr_state = malloc(sizeof(plane_state));
-	curr_state->velocity = 500;
+	curr_state->velocity = 400;
 	curr_state->heading = 0;
 
 	curr_state->pos = malloc(sizeof(vector));
@@ -69,6 +70,7 @@ void init_plane_state(void) {
 	curr_state->pos->z = 2000;
 }
 
+// handler for calibration and increasing speed
 void PORTC_IRQHandler(void){
 	if (!calibrated) calibrated = 1;
 	else {
@@ -77,13 +79,15 @@ void PORTC_IRQHandler(void){
 	PORTC->PCR[6] |= PORT_PCR_ISF(1);
 }
 
+// handler for decreasing speed
 void PORTA_IRQHandler(void) {
 	curr_state->velocity-=SPEED_INC;
 	PORTA->PCR[4] |= PORT_PCR_ISF(1);
 }
 
+// enables SW2 and SW3 interrupts for PORTC and PORTA, respectively
 void setup_switches(void){
-	// NOTE: have to do FOPT EQU 0x011 in startup_MK64F12.s for SW3 to work
+	// NOTE: have to do FOPT EQU 0x000 in startup_MK64F12.s for SW3 to work
 	SIM->SCGC5 |= SIM_SCGC5_PORTC_MASK;
 	
 	PORTC->PCR[6] = PORT_PCR_MUX(001);
@@ -101,6 +105,15 @@ void setup_switches(void){
 	NVIC_EnableIRQ(PORTA_IRQn); 
 }
 
+// prints the necessary data to the serial output
+void print_to_serial(void) {
+		__disable_irq();
+		printf("{'v': %f, 'heading': %f, 'x': %f, 'y': %f, 'z': %f, 'nearest_wp': {'x': %f, 'y': %f, 'z': %f}, 'wp_r': %f, 'wp_hit': %d, 'time': {'m': %d, 's': %d}}\r\n",
+		curr_state->velocity, curr_state->heading * 180 / PI, curr_state->pos->x, curr_state->pos->y, curr_state->pos->z,
+		nearest_waypoint->near_pos->x, nearest_waypoint->near_pos->y, nearest_waypoint->near_pos->z, nearest_waypoint->near_radius, waypoints_hit, time_remaining->minutes, time_remaining->seconds);
+		__enable_irq();
+}
+
 int main(){
 	// init stuff
 	hardware_init();
@@ -113,7 +126,9 @@ int main(){
 	setup_switches();
 	init_waypoints();
 
-	while (!calibrated); // wait to start game
+	print_to_serial(); // print initial state to serial
+	while (!calibrated); // wait to start game and calibrate
+	
 	// continuously poll the accelerometer
 	while(1) {
 		Accelerometer_GetState(&state);
@@ -128,6 +143,7 @@ int main(){
 		update_plane_status(relative);
 		free(relative);
 
+		// if hit waypoint, blink green LED 
 		if (did_hit_waypoint()) {
 			LEDGreen_On();
 			LEDBlue_Off();
@@ -135,21 +151,25 @@ int main(){
 		} else {
 			LEDGreen_Off();
 
-			dist_to_closest = is_near_waypoint();
-			if (dist_to_closest > 0) {
+		// if entered a nearby waypoint's radius, begin blinking blue LED and
+		// turn off otherwise
+		dist_to_closest = is_near_waypoint();
+		if (dist_to_closest > 0) {
 				NVIC_EnableIRQ(PIT0_IRQn);
 			} else {
 				NVIC_DisableIRQ(PIT0_IRQn);
 				LEDBlue_Off();
 			}
 		}
-
+		
+		// if out of bounds, print CRASH to serial line to terminate
 		if (did_exceed_bounds()) {
 			LEDRed_On();
 			printf("CRASH");
 			break;
 		}
-
+		
+		// if completed the game, print DONE to serial to terminate
 		if (waypoints_hit == TOTAL_WAYPOINTS) {
 			LEDGreen_On();
 			printf("DONE");
@@ -157,11 +177,7 @@ int main(){
 		}
 
 		// make printing to serial atomic
-		__disable_irq();
-		printf("{'v': %f, 'heading': %f, 'x': %f, 'y': %f, 'z': %f, 'nearest_wp': {'x': %f, 'y': %f, 'z': %f}, 'wp_r': %f, 'wp_hit': %d, 'time': {'m': %d, 's': %d}}\r\n",
-		curr_state->velocity, curr_state->heading * 180 / PI, curr_state->pos->x, curr_state->pos->y, curr_state->pos->z,
-		nearest_waypoint->near_pos->x, nearest_waypoint->near_pos->y, nearest_waypoint->near_pos->z, nearest_waypoint->near_radius, waypoints_hit, time_remaining->minutes, time_remaining->seconds);
-		__enable_irq();
+		print_to_serial();
 
 		for (int i = 0; i < 100000; i++);
 	}
