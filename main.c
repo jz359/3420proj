@@ -83,6 +83,7 @@ void PORTA_IRQHandler(void) {
 }
 
 void setup_switches(void){
+	// NOTE: have to do FOPT EQU 0x011 in startup_MK64F12.s for SW3 to work
 	SIM->SCGC5 |= SIM_SCGC5_PORTC_MASK;
 	
 	PORTC->PCR[6] = PORT_PCR_MUX(001);
