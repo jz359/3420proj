@@ -7,9 +7,10 @@ int z_0;
 unsigned int BOARD_SIZE = 2000;
 unsigned int ACCEL_POLL_TIME_INT = DEFAULT_SYSTEM_CLOCK / 100;
 float TIME_INT_S = 0.01;
-unsigned int TOTAL_WAYPOINTS = 10;
+unsigned int TOTAL_WAYPOINTS = 1;
 float DIV_CONST = 1000;
 float TIME_UNIT = 0.01;
+int SPEED_INC = 10;
 
 unsigned int GREEN_LED_DELAY = DEFAULT_SYSTEM_CLOCK * 3;
 unsigned int BLUE_LED_DELAY = DEFAULT_SYSTEM_CLOCK;

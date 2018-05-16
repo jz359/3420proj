@@ -3,6 +3,8 @@
 #include <fsl_device_registers.h>
 #include <math.h>
 
+#define PI 3.14159265f
+
 // holds the time information
 typedef struct time_s {
 	unsigned int minutes;
@@ -23,6 +25,7 @@ extern float TIME_INT_S;
 extern unsigned int TOTAL_WAYPOINTS;
 extern float DIV_CONST;
 extern float TIME_UNIT;
+extern int SPEED_INC;
 
 extern unsigned int GREEN_LED_DELAY;
 extern unsigned int BLUE_LED_DELAY;

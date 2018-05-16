@@ -4,16 +4,16 @@
 #include "utils.h"
 #include "constants.h"
 #include "waypoint.h"
+#include <stdlib.h>
 
-#define PI 3.14159265
-
-plane_state *curr_state;
+volatile plane_state *curr_state;
 volatile float dist_to_closest = 0;
 volatile time_s *time_remaining = NULL;
 ACCELEROMETER_STATE state;
 float grav = 0;
-
 float MAX_DISTANCE = 2000;
+
+volatile int calibrated = 0;
 
 /*
 	PIT0 represents the timer to continually poll the LED
@@ -39,73 +39,6 @@ void PIT1_IRQHandler(void) {
 	__enable_irq();
 }
 
-/*
-	Code to setup the PIT0
-*/
-void setup_led_timer(void) {
-	SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
-	PIT->MCR = 0;
-
-	NVIC_EnableIRQ(PIT0_IRQn);
-	NVIC_EnableIRQ(PIT1_IRQn);
-
-	PIT->CHANNEL[0].LDVAL = BLUE_LED_DELAY;
-	PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
-	PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
-
-	PIT->CHANNEL[1].LDVAL = DEFAULT_SYSTEM_CLOCK*2.5; // 1 s timer
-	PIT->CHANNEL[1].TFLG = PIT_TFLG_TIF(1);
-	PIT->CHANNEL[1].TCTRL = 3 ; // start Timer 1
-}
-
-int did_exceed_bounds() {
-	int x_exceed = curr_state->pos->x > 2000 || curr_state->pos->x < 0;
-	int y_exceed = curr_state->pos->y > 2000 || curr_state->pos->y < 0;
-	int time_exceeded = !time_remaining->minutes && !time_remaining->seconds;
-
-	return (x_exceed > 0 || y_exceed > 0 || curr_state->pos->z <= 0 || curr_state->velocity < 50 || time_exceeded);
-}
-
-/*
-	Calculates the distance based on the accelerations at a given time
-*/
-float calc_distance(vector *state, vector *state2) {
-	float x_d = state->x - state2->x;
-	float y_d = state->y - state2->y;
-	float z_d = state->z - state2->z;
-	return sqrt(x_d * x_d + y_d * y_d + z_d * z_d);
-}
-
-void calculate_pitch(float y) {
-	float percentage = y/grav;
-	curr_state->velocity -= percentage * 0.1;
-	curr_state->pos->z +=  curr_state->velocity * 0.5 * percentage * TIME_UNIT;
-}
-
-void calculate_roll(float x) {
-	float percentage = x/grav;
-	float angle = percentage*PI;
-
-	float diff = (fabs(angle/100) > 0.01 ? angle/100 : 0); //threshold val to detect change
-
-	float updated = curr_state->heading - diff;
-	float new_heading = updated < 0 ? 2 * PI + updated : updated;
-	curr_state->heading = fmod(new_heading, 2 * PI);
-
-	float heading = curr_state->heading;
-
-	curr_state->pos->x += curr_state->velocity * 0.5 * cos(heading) * TIME_UNIT;
-	curr_state->pos->y += curr_state->velocity * 0.5 * sin(heading) * TIME_UNIT;
-}
-
-/*
-	Updates the plane status with the given vector
-*/
-void update_plane_status(vector *state) {
-	curr_state->velocity -= curr_state->velocity * 0.000005;
-	calculate_pitch(state->y);
-	calculate_roll(state->x);
-}
 
 /**
 	Initializes the acceleration values in x_0, y_0, z_0 so we get an accurate relative acceleration
@@ -135,9 +68,39 @@ void init_plane_state(void) {
 	curr_state->pos->z = 2000;
 }
 
+void PORTC_IRQHandler(void){
+	if (!calibrated) calibrated = 1;
+	else {
+		curr_state->velocity+=SPEED_INC;
+	}
+	PORTC->PCR[6] |= PORT_PCR_ISF(1);
+}
+
+void PORTA_IRQHandler(void) {
+	curr_state->velocity-=SPEED_INC;
+	PORTA->PCR[4] |= PORT_PCR_ISF(1);
+}
+
+void setup_switches(void){
+	SIM->SCGC5 |= SIM_SCGC5_PORTC_MASK;
+	
+	PORTC->PCR[6] = PORT_PCR_MUX(001);
+	PTC->PDDR &= ~(1<<6);
+	PORTC->PCR[6] |= PORT_PCR_IRQC(0xA);
+	PORTC->PCR[6] |= PORT_PCR_PE(1);
+	PORTC->PCR[6] |= PORT_PCR_PS(1);
+	NVIC_EnableIRQ(PORTC_IRQn);
+
+	PORTA->PCR[4] |= PORT_PCR_MUX(001); 
+	PTA->PDDR &= ~(1<<4);
+	PORTA->PCR[4] |= PORT_PCR_IRQC(0xA);
+	PORTA->PCR[4] |= PORT_PCR_PE(1);
+	PORTA->PCR[4] |= PORT_PCR_PS(1);
+	NVIC_EnableIRQ(PORTA_IRQn); 
+}
+
 int main(){
 	// init stuff
-	
 	hardware_init();
 	Accelerometer_Initialize();
 	LED_Initialize();
@@ -145,8 +108,10 @@ int main(){
 	init_plane_state();
 
 	setup_led_timer();
-	init_waypoint();
+	setup_switches();
+	init_waypoints();
 
+	while (!calibrated); // wait to start game
 	// continuously poll the accelerometer
 	while(1) {
 		Accelerometer_GetState(&state);
@@ -160,19 +125,11 @@ int main(){
 		// update the plane's status 
 		update_plane_status(relative);
 		free(relative);
-		
-		// make printing to serial atomic
-		__disable_irq();
-		printf("{'v': %f, 'heading': %f, 'x': %f, 'y': %f, 'z': %f, 'nearest_wp': {'x': %f, 'y': %f, 'z': %f}, 'wp_r': %f, 'wp_hit': %d, 'time': {'m': %d, 's': %d}}\r\n",
-		curr_state->velocity, curr_state->heading * 180 / PI, curr_state->pos->x, curr_state->pos->y, curr_state->pos->z,
-		nearest_waypoint->near_pos->x, nearest_waypoint->near_pos->y, nearest_waypoint->near_pos->z, nearest_waypoint->near_radius, waypoints_hit, time_remaining->minutes, time_remaining->seconds);
-		__enable_irq();
 
 		if (did_hit_waypoint()) {
 			LEDGreen_On();
 			LEDBlue_Off();
 			NVIC_DisableIRQ(PIT0_IRQn);
-			init_waypoint();
 		} else {
 			LEDGreen_Off();
 
@@ -185,25 +142,6 @@ int main(){
 			}
 		}
 
-		/*
-		// light up if nearby
-		dist_to_closest = is_near_waypoint();
-		if (dist_to_closest > 0) {
-			// light up green if good
-			if (flag) {
-				LEDGreen_On();
-				NVIC_DisableIRQ(PIT0_IRQn);
-				init_waypoint();
-			} else {
-				LEDGreen_Off();
-				NVIC_EnableIRQ(PIT0_IRQn);
-			}
-		} else {
-			NVIC_DisableIRQ(PIT0_IRQn);
-			LEDBlue_Off();
-		}
-		*/
-
 		if (did_exceed_bounds()) {
 			LEDRed_On();
 			printf("CRASH");
@@ -215,6 +153,13 @@ int main(){
 			printf("DONE");
 			break;
 		}
+
+		// make printing to serial atomic
+		__disable_irq();
+		printf("{'v': %f, 'heading': %f, 'x': %f, 'y': %f, 'z': %f, 'nearest_wp': {'x': %f, 'y': %f, 'z': %f}, 'wp_r': %f, 'wp_hit': %d, 'time': {'m': %d, 's': %d}}\r\n",
+		curr_state->velocity, curr_state->heading * 180 / PI, curr_state->pos->x, curr_state->pos->y, curr_state->pos->z,
+		nearest_waypoint->near_pos->x, nearest_waypoint->near_pos->y, nearest_waypoint->near_pos->z, nearest_waypoint->near_radius, waypoints_hit, time_remaining->minutes, time_remaining->seconds);
+		__enable_irq();
 
 		for (int i = 0; i < 100000; i++);
 	}

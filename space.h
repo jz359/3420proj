@@ -13,10 +13,13 @@ typedef struct plane_state {
 	vector *pos;
 } plane_state;
 
-extern plane_state *curr_state;
+volatile extern plane_state *curr_state;
 
 void setup_led_timer(void);
-
-float calc_distance(vector *state, vector* state2);
+int did_exceed_bounds(void);
+float calc_distance(vector *state, vector *state2);
+void calculate_pitch(float y);
+void calculate_roll(float x);
+void update_plane_status(vector *state);
 
 #endif
