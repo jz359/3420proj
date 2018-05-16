@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "waypoint.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 volatile plane_state *curr_state;
 volatile float dist_to_closest = 0;

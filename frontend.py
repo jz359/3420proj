@@ -26,7 +26,6 @@ def main():
     pygame.display.set_caption("Waypoint Catchers")
     screen = pygame.display.set_mode((X,Y))
     triangle = pygame.image.load("plane.png")
-    image_rect = triangle.get_rect(center=screen.get_rect().center)
     
     while True:
         for event in pygame.event.get():
@@ -43,9 +42,10 @@ def main():
                 screen.fill(WHITE)  
                 timer_data = data['time']
                 
-                image = pygame.transform.rotate(triangle, 360 - int(data['heading']))
-                image = pygame.transform.scale(image, (30,30))
-                screen.blit(image, (calc_point(data['x']) - 15,calc_point(data['y']) - 15)) # draw the player
+                image = pygame.transform.scale(triangle, (30,30))
+                image = pygame.transform.rotate(image, 360 - int(data['heading']))
+                image_rect = image.get_rect(center=screen.get_rect().center)
+                screen.blit(image, (calc_point(data['x']) - image_rect.width/2,calc_point(data['y'])- image_rect.height/2)) # draw the player
 
                 waypoint_data = data['nearest_wp']
                 pygame.draw.circle(screen, (0,0,0), [calc_point(waypoint_data['x']), calc_point(waypoint_data['y'])], int(data['wp_r'] * SCALE**2) , 1) # waypoint
@@ -64,7 +64,8 @@ def main():
                 draw_text(screen, 'Waypoints:' + str(data['wp_hit']) + "/10", 16, text_font)
                 if data['v'] < 70:
                     draw_text(screen, "STALL WARNING!", 18, text_font)
-            except:
+            except Exception as e:
+                print e
                 continue   
         pygame.display.flip()
 main()
