@@ -7,6 +7,9 @@ volatile waypoint* waypoint_tail = NULL;
 volatile unsigned int waypoints_hit = 0;
 volatile float angle_next_wp = 0;
 
+/*
+	Push a waypoint to the end of the waypoint queue
+*/
 void push_tail_waypoint(waypoint *wp) {
 	if (!waypoint_head) {
 		waypoint_head = wp;
@@ -22,7 +25,9 @@ void push_tail_waypoint(waypoint *wp) {
 	waypoint_tail->next = NULL;
 }
 
-// /helpers
+/*
+	Inits a waypoint randomly in the xy plane and within its radius
+*/
 void init_waypoint(void) {
 	int neg = rand() % 2 == 0 ? 1 : -1;
 
@@ -42,6 +47,9 @@ void init_waypoint(void) {
 	push_tail_waypoint(wp);
 }
 
+/*
+	Inits all the waypoints as specified by the game parameters
+*/ 
 void init_waypoints(void) {
 	for (int i = 0; i < TOTAL_WAYPOINTS; i++) {
 		init_waypoint();
@@ -50,9 +58,12 @@ void init_waypoints(void) {
 	nearest_waypoint = waypoint_head;
 }
 
+/*
+	Updates to the closest nearest waypoint that exists to the plane
+*/
 void update_nearest_waypoint(void) {
 
-	if (!nearest_waypoint) return;
+	if (!nearest_waypoint) return; // if no waypoints nearby, exit
 
 	float target_distance;
 
@@ -65,7 +76,7 @@ void update_nearest_waypoint(void) {
 	volatile waypoint* travel = waypoint_head;
 	travel->next;
 
-	while (travel) {
+	while (travel) { // find the nearest waypoint by claculating distances from all waypoints
 		if (!travel->is_hit) {
 			float d = calc_distance(travel->pos, curr_state->pos);
 			if (d < target_distance) {
@@ -77,6 +88,10 @@ void update_nearest_waypoint(void) {
 	}
 }
 
+/*
+	Returns if the plane is currently near the nearest waypoint, which prompts the Blue LED 
+	to begin blinking (from the main loop)
+*/
 float is_near_waypoint(void) {
 	float d = calc_distance(nearest_waypoint->pos, curr_state->pos);
 	if (d <= nearest_waypoint->near_radius) {
@@ -85,10 +100,15 @@ float is_near_waypoint(void) {
 	return -1.;
 }
 
+/*
+	Returns if the plane has hit the waypoint, and then initializes the next waypoint in the queue
+*/
 int did_hit_waypoint(void) {
 	if (calc_distance(nearest_waypoint->pos, curr_state->pos) <= nearest_waypoint->def_radius) {
 		nearest_waypoint->is_hit = 1;
 		waypoints_hit++;
+
+		// terminate the game if all waypoints have been hit
 		if (waypoints_hit == TOTAL_WAYPOINTS) {
 			return 1;
 		}

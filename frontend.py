@@ -64,8 +64,7 @@ def main():
                 draw_text(screen, 'Waypoints:' + str(data['wp_hit']) + "/10", 16, text_font)
                 if data['v'] < 70:
                     draw_text(screen, "STALL WARNING!", 18, text_font)
-            except Exception as e:
-                print e
+            except:
                 continue   
         pygame.display.flip()
 main()

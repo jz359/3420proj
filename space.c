@@ -8,8 +8,6 @@ void setup_led_timer(void) {
     SIM->SCGC6 |= SIM_SCGC6_PIT_MASK;
     PIT->MCR = 0;
 
-    NVIC_EnableIRQ(PIT1_IRQn);
-
     PIT->CHANNEL[0].LDVAL = BLUE_LED_DELAY;
     PIT->CHANNEL[0].TFLG = PIT_TFLG_TIF(1);
     PIT->CHANNEL[0].TCTRL = 3 ; // start Timer 0
@@ -19,6 +17,9 @@ void setup_led_timer(void) {
     PIT->CHANNEL[1].TCTRL = 3 ; // start Timer 1
 }
 
+/*
+    Return true if the plane has exceeded the bounds of the game, which will terminate the main loop
+*/
 int did_exceed_bounds() {
     int x_exceed = curr_state->pos->x > 2000 || curr_state->pos->x < 0;
     int y_exceed = curr_state->pos->y > 2000 || curr_state->pos->y < 0;
@@ -37,12 +38,18 @@ float calc_distance(vector *state, vector *state2) {
     return sqrt(x_d * x_d + y_d * y_d + z_d * z_d);
 }
 
+/*
+    Takes the current relative pitch from the accelerometer data and updates the speed and position of the plane
+*/
 void calculate_pitch(float y) {
     float percentage = y/grav;
     curr_state->velocity -= percentage * 0.1f;
     curr_state->pos->z +=  curr_state->velocity * 0.5f * percentage * TIME_UNIT;
 }
 
+/*
+    Takes the current relative roll from the accelerometer and updates the position and heading of the plane
+*/
 void calculate_roll(float x) {
     float percentage = x/grav;
     float angle = percentage*PI;

@@ -128,6 +128,7 @@ int main(){
 
 	print_to_serial(); // print initial state to serial
 	while (!calibrated); // wait to start game and calibrate
+	NVIC_EnableIRQ(PIT1_IRQn); // start the game timer 
 	
 	// continuously poll the accelerometer
 	while(1) {
